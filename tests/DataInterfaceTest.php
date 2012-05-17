@@ -145,7 +145,58 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $this->assertEquals($termArray, $fooTermArray);
     }
 
-    public function testSaveTermAddsNewTermToFolksaurusTermDataTable()
+    public function testSaveTermAddsNewTermToWpTermTableAndFolksaurusTermTable()
+    {
+        global $wpdb;
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => '400',
+                'name'           => 'Bar',
+                'scope_note'     => 'Scope note for Bar.',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(),
+                'app_id'         => '',
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $wpRow = $wpdb->get_row(
+            'SELECT * FROM ' . $wpdb->terms . ' WHERE name = "Bar"',
+            ARRAY_A
+        );
+
+        $this->assertTrue(is_array($wpRow));
+        $this->assertEquals('Bar', $wpRow['name']);
+        $this->assertEquals('bar', $wpRow['slug']);
+
+        $folkRow = $wpdb->get_row(
+            'SELECT * FROM ' . FOLKSAURUS_TERM_DATA_TABLE .
+            ' WHERE term_id = ' . $wpRow['term_id'],
+            ARRAY_A
+        );
+
+        $this->assertTrue(is_array($folkRow));
+        $this->assertEquals('400', $folkRow['folksaurus_id']);
+        $this->assertEquals('Scope note for Bar.', $folkRow['scope_note']);
+        $this->assertEquals('1', $folkRow['preferred']);
+        $this->assertEquals('0', $folkRow['ambiguous']);
+        $this->assertEquals('0', $folkRow['deleted']);
+        $this->assertEquals(date('Y-m-d H:i:s', 0), $folkRow['last_retrieved']);
+    }
+
+    public function testSaveTermAddsNewTermToFolksaurusTermDataTableIfAlreadyExistsInWpTable()
     {
         global $wpdb;
 

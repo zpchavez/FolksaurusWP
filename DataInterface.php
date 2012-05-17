@@ -70,6 +70,8 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                     $appId
                 )
             );
+        } else {
+            $wasPreferred = false;
         }
 
         $this->_updateOrInsertTermInWpTerms($term);
@@ -130,6 +132,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                 $slugIndex += 1;
             }
             $appId = $wpdb->insert_id;
+            $term->setAppId($appId);
         }
         return $appId;
     }
