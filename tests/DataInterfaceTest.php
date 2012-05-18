@@ -41,6 +41,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                 'folksaurus_id'  => self::FOO_FOLK_ID,
                 'scope_note'     => $fooTermArray['scope_note'],
                 'last_retrieved' => $fooTermArray['last_retrieved'],
+                'preferred'      => 1,
                 'deleted'        => 0
             )
         );
@@ -626,12 +627,104 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
     public function testPreferredFlagSetToFalseIfTermNoLongerPreferred()
     {
-        $this->markTestIncomplete();
+        global $wpdb;
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => self::FOO_FOLK_ID,
+                'name'           => 'Foo',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(
+                    array(
+                        'id'   => '400',
+                        'name' => 'RealFoo'
+                    )
+                ),
+                'app_id'         => self::FOO_WP_ID,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        // Assert begins as preferred.
+        $preferred = $wpdb->get_var(
+            'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(1, $preferred);
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $preferred = $wpdb->get_var(
+            'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(0, $preferred);
     }
 
     public function testPreferredFlagSetToTrueIfTermBecomesPreferred()
     {
-        $this->markTestIncomplete();
+        global $wpdb;
+
+        $wpdb->update(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'preferred' => '0'
+            ),
+            array(
+                'term_id' => self::FOO_WP_ID
+            )
+        );
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => self::FOO_FOLK_ID,
+                'name'           => 'Foo',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(
+                    array(
+                        'id'   => '400',
+                        'name' => 'Faux'
+                    )
+                ),
+                'use'            => array(),
+                'app_id'         => self::FOO_WP_ID,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        // Assert begins as non-preferred.
+        $preferred = $wpdb->get_var(
+            'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(0, $preferred);
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $preferred = $wpdb->get_var(
+            'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(1, $preferred);
     }
 
     public function testWpObjectRelationshipsUpdatedWhenPreferredTermChanges()
