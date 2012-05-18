@@ -486,7 +486,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         $term = new Folksaurus\Term(
             array(
-                'id'             => '300',
+                'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
                 'scope_note'     => '',
                 'broader'        => array(),
@@ -525,12 +525,103 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
     public function testAmbiguousFlagSetToTrueIfTermBecomesAmbiguous()
     {
-        $this->markTestIncomplete();
+        global $wpdb;
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => self::FOO_FOLK_ID,
+                'name'           => 'Foo',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(
+                    array(
+                        'id'   => '400',
+                        'name' => 'RealFoo'
+                    ),
+                    array(
+                        'id'   => '500',
+                        'name' => 'RealFooToo'
+                    )
+                ),
+                'app_id'         => self::FOO_WP_ID,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        // Assert begins non-ambiguous.
+        $ambiguous = $wpdb->get_var(
+            'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(0, $ambiguous);
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $ambiguous = $wpdb->get_var(
+            'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(1, $ambiguous);
     }
 
     public function testAmbiguousFlagSetToFalseIfTermIsNotAmbiguous()
     {
-        $this->markTestIncomplete();
+        global $wpdb;
+
+        $wpdb->update(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'ambiguous' => '1'
+            ),
+            array(
+                'term_id' => self::FOO_WP_ID
+            )
+        );
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => self::FOO_FOLK_ID,
+                'name'           => 'Foo',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(),
+                'app_id'         => self::FOO_WP_ID,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        // Assert begins ambiguous.
+        $ambiguous = $wpdb->get_var(
+            'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(1, $ambiguous);
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $ambiguous = $wpdb->get_var(
+            'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
+            . ' WHERE term_id = ' . self::FOO_WP_ID
+        );
+        $this->assertEquals(0, $ambiguous);
     }
 
     public function testPreferredFlagSetToFalseIfTermNoLongerPreferred()
