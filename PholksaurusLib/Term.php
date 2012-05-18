@@ -137,7 +137,7 @@ class Term
 
         $termValues = array_merge($defaultValues, $values);
 
-        $this->_termManager           = $termManager;
+        $this->_termManager   = $termManager;
         $this->_id            = $termValues['id'];
         $this->_name          = $termValues['name'];
         $this->_scopeNote     = $termValues['scope_note'];

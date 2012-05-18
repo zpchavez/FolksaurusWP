@@ -183,8 +183,8 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
 
         $appId = $wpdb->get_var(
             $wpdb->prepare(
-                'SELECT term_id FROM %s where folksaurus_id = %d',
-                FOLKSAURUS_TERM_DATA_TABLE,
+                'SELECT term_id FROM ' . FOLKSAURUS_TERM_DATA_TABLE .
+                ' where folksaurus_id = %d',
                 $termSummary->getId()
             )
         );
@@ -225,8 +225,9 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
         // First clear existing relationships.
         $wpdb->query(
             $wpdb->prepare(
-                'DELETE FROM %s WHERE term_id = %d',
-                FOLKSAURUS_TERM_REL_TABLE,
+                'DELETE FROM ' . FOLKSAURUS_TERM_REL_TABLE .
+                ' WHERE term_id = %d OR related_id = %d',
+                $term->getAppId(),
                 $term->getAppId()
             )
         );
@@ -238,7 +239,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                     FOLKSAURUS_TERM_REL_TABLE,
                     array(
                         'term_id'    => $appId,
-                        'type'       => 'BT',
+                        'rel_type'   => 'NT',
                         'related_id' => $term->getAppId()
                     )
                 );
@@ -258,7 +259,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                     FOLKSAURUS_TERM_REL_TABLE,
                     array(
                         'term_id'    => $term->getAppId(),
-                        'type'       => 'BT',
+                        'rel_type'   => 'NT',
                         'related_id' => $appId
                     )
                 );
@@ -278,7 +279,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                     FOLKSAURUS_TERM_REL_TABLE,
                     array(
                         'term_id'    => $term->getAppId(),
-                        'type'       => 'UF',
+                        'rel_type'   => 'UF',
                         'related_id' => $appId
                     )
                 );
@@ -292,7 +293,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                     FOLKSAURUS_TERM_REL_TABLE,
                     array(
                         'term_id'    => $appId,
-                        'type'       => 'UF',
+                        'rel_type'   => 'UF',
                         'related_id' => $term->getAppId()
                     )
                 );
@@ -307,7 +308,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                     FOLKSAURUS_TERM_REL_TABLE,
                     array(
                         'term_id'    => min($appId, $term->getAppId()),
-                        'type'       => 'RT',
+                        'rel_type'   => 'RT',
                         'related_id' => max($appId, $term->getAppId())
                     )
                 );

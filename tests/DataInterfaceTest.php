@@ -206,7 +206,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             array(
                 'term_id' => '4',
                 'name'    => 'Bar',
-                'slug'    => 'slug'
+                'slug'    => 'bar'
             )
         );
 
@@ -246,5 +246,310 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $this->assertEquals('0', $row['ambiguous']);
         $this->assertEquals('0', $row['deleted']);
         $this->assertEquals(date('Y-m-d H:i:s', 0), $row['last_retrieved']);
+    }
+
+    public function testExistingTermNameAndScopeNoteUpdatedWhenSaved()
+    {
+        global $wpdb;
+
+        // Term already exists in WP's term table
+        $wpdb->insert(
+            $wpdb->terms,
+            array(
+                'term_id' => '4',
+                'name'    => 'Bar',
+                'slug'    => 'bar'
+            )
+        );
+        // and Folksaurus term table.
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'       => '4',
+                'folksaurus_id' => '400',
+                'scope_note'    => 'Scope note for Baz.',
+                'preferred'     => '1',
+                'ambiguous'     => '0',
+            )
+        );
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => '400',
+                'name'           => 'Baz',
+                'scope_note'     => 'Scope note for Baz.',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(),
+                'app_id'         => '4',
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $wpRow = $wpdb->get_row(
+            'SELECT * FROM ' . $wpdb->terms . ' WHERE term_id = 4',
+            ARRAY_A
+        );
+
+        $this->assertTrue(is_array($wpRow));
+        $this->assertEquals('Baz', $wpRow['name']);
+        $this->assertEquals('baz', $wpRow['slug']);
+
+        $folkRow = $wpdb->get_row(
+            'SELECT * FROM ' . FOLKSAURUS_TERM_DATA_TABLE .
+            ' WHERE term_id = 4',
+            ARRAY_A
+        );
+
+        $this->assertTrue(is_array($folkRow));
+        $this->assertEquals('400', $folkRow['folksaurus_id']);
+        $this->assertEquals('Scope note for Baz.', $folkRow['scope_note']);
+        $this->assertEquals('1', $folkRow['preferred']);
+        $this->assertEquals('0', $folkRow['ambiguous']);
+        $this->assertEquals('0', $folkRow['deleted']);
+        $this->assertEquals(date('Y-m-d H:i:s', 0), $folkRow['last_retrieved']);
+    }
+
+    public function testRelationshipsAddedWhenSaved()
+    {
+        global $wpdb;
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $barTermId = 4;
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => '400',
+                'name'           => 'Bar',
+                'scope_note'     => 'Scope note for Bar.',
+                'broader'        => array(
+                    array(
+                        'id'   => '500',
+                        'name' => 'SuperBar'
+                    )
+                ),
+                'narrower'       => array(
+                    array(
+                        'id'   => '600',
+                        'name' => 'SubBar'
+                    )
+                ),
+                'related'        => array(
+                    array(
+                        'id'   => '700',
+                        'name' => 'RelBar'
+                    )
+                ),
+                'used_for'       => array(
+                    array(
+                        'id'   => '800',
+                        'name' => 'UsedForBar'
+                    )
+                ),
+                'use'            => array(),
+                'app_id'         => $barTermId,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $superBarTermId = $wpdb->get_var(
+            'SELECT term_id FROM ' . $wpdb->terms . ' WHERE name = "SuperBar"'
+        );
+
+        $subBarTermId = $wpdb->get_var(
+            'SELECT term_id FROM ' . $wpdb->terms . ' WHERE name = "SubBar"'
+        );
+
+        $relBarTermId = $wpdb->get_var(
+            'SELECT term_id FROM ' . $wpdb->terms . ' WHERE name = "RelBar"'
+        );
+
+        $usedForBarTermId = $wpdb->get_var(
+            'SELECT term_id FROM ' . $wpdb->terms . ' WHERE name = "UsedForBar"'
+        );
+
+        $results = $wpdb->get_results('SELECT * FROM ' . FOLKSAURUS_TERM_REL_TABLE, ARRAY_A);
+
+        $this->assertContains(
+            array(
+                'term_id'    => $superBarTermId,
+                'rel_type'   => 'NT',
+                'related_id' => $barTermId
+            ),
+            $results
+        );
+
+        $this->assertContains(
+            array(
+                'term_id'    => $barTermId,
+                'rel_type'   => 'NT',
+                'related_id' => $subBarTermId
+            ),
+            $results
+        );
+
+        $this->assertContains(
+            array(
+                'term_id'    => $barTermId,
+                'rel_type'   => 'RT',
+                'related_id' => $relBarTermId
+            ),
+            $results
+        );
+
+        $this->assertContains(
+            array(
+                'term_id'    => $barTermId,
+                'rel_type'   => 'UF',
+                'related_id' => $usedForBarTermId
+            ),
+            $results
+        );
+    }
+
+    public function testRelationshipsRemovedWhenSaved()
+    {
+        global $wpdb;
+
+        // Set up two existing relationships.  One will be removed.
+        $wpdb->insert(
+            $wpdb->terms,
+            array(
+                'term_id' => '4',
+                'name'    => 'Bar',
+                'slug'    => 'bar'
+            )
+        );
+        $wpdb->insert(
+            $wpdb->terms,
+            array(
+                'term_id' => '5',
+                'name'    => 'Phoo',
+                'slug'    => 'phoo'
+            )
+        );
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'       => '4',
+                'folksaurus_id' => '400',
+                'preferred'     => '1'
+            )
+        );
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'       => '5',
+                'folksaurus_id' => '500',
+                'preferred'     => '1'
+            )
+        );
+
+        // Both are related terms.
+        $wpdb->insert(
+            FOLKSAURUS_TERM_REL_TABLE,
+            array(
+                'term_id'    => self::FOO_WP_ID,
+                'rel_type'   => 'RT',
+                'related_id' => '4'
+            )
+        );
+        $wpdb->insert(
+            FOLKSAURUS_TERM_REL_TABLE,
+            array(
+                'term_id'    => self::FOO_WP_ID,
+                'rel_type'   => 'RT',
+                'related_id' => '5'
+            )
+        );
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => '300',
+                'name'           => 'Foo',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(
+                    array(
+                        'id'   => '500',
+                        'name' => 'Phoo'
+                    )
+                ),
+                'used_for'       => array(),
+                'use'            => array(),
+                'app_id'         => self::FOO_WP_ID,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $results = $wpdb->get_results('SELECT * FROM ' . FOLKSAURUS_TERM_REL_TABLE, ARRAY_A);
+
+        // Still related to Phoo but not Bar.
+        $this->assertEquals(
+            array(
+                array(
+                    'term_id'    => self::FOO_WP_ID,
+                    'rel_type'   => 'RT',
+                    'related_id' => '5'
+                )
+            ),
+            $results
+        );
+    }
+
+    public function testAmbiguousFlagSetToTrueIfTermBecomesAmbiguous()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testAmbiguousFlagSetToFalseIfTermIsNotAmbiguous()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testPreferredFlagSetToFalseIfTermNoLongerPreferred()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testPreferredFlagSetToTrueIfTermBecomesPreferred()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testWpObjectRelationshipsUpdatedWhenPreferredTermChanges()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testParentIdValuesSetInWpTaxonomyTableForNarrowerAndBroaderTerms()
+    {
+        $this->markTestIncomplete();
     }
 }
