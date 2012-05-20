@@ -146,7 +146,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $this->assertEquals($termArray, $fooTermArray);
     }
 
-    public function testSaveTermAddsNewTermToWpTermTableAndFolksaurusTermTable()
+    public function testTermNotSavedIfItDoesNotExistInTheTermTable()
     {
         global $wpdb;
 
@@ -178,9 +178,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             ARRAY_A
         );
 
-        $this->assertTrue(is_array($wpRow));
-        $this->assertEquals('Bar', $wpRow['name']);
-        $this->assertEquals('bar', $wpRow['slug']);
+        $this->assertNull($wpRow);
 
         $folkRow = $wpdb->get_row(
             'SELECT * FROM ' . FOLKSAURUS_TERM_DATA_TABLE .
@@ -188,13 +186,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             ARRAY_A
         );
 
-        $this->assertTrue(is_array($folkRow));
-        $this->assertEquals('400', $folkRow['folksaurus_id']);
-        $this->assertEquals('Scope note for Bar.', $folkRow['scope_note']);
-        $this->assertEquals('1', $folkRow['preferred']);
-        $this->assertEquals('0', $folkRow['ambiguous']);
-        $this->assertEquals('0', $folkRow['deleted']);
-        $this->assertEquals(date('Y-m-d H:i:s', 0), $folkRow['last_retrieved']);
+        $this->assertNull($folkRow);
     }
 
     public function testSaveTermAddsNewTermToFolksaurusTermDataTableIfAlreadyExistsInWpTable()

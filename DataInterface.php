@@ -74,7 +74,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
             $wasPreferred = false;
         }
 
-        $this->_updateOrInsertTermInWpTerms($term);
+        $this->_updateTermInWpTerms($term);
 
         $this->_updateOrInsertTermInFolksaurusTermData($term);
 
@@ -85,12 +85,13 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
     }
 
     /**
-     * Update or insert a term in wp_terms.
+     * Update a term in wp_terms.
+     *
+     * @todo delete
      *
      * @param Folksaurus\Term $term
-     * @return int|bool  The app_id on success, false on failure.
      */
-    protected function _updateOrInsertTermInWpTerms(Folksaurus\Term $term)
+    protected function _updateTermInWpTerms(Folksaurus\Term $term)
     {
         global $wpdb;
 
@@ -118,23 +119,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
             if (!$updated) {
                 return false;
             }
-        } else {
-            $inserted = false;
-            while (!$inserted && $slugIndex < 10) {
-                $inserted = $wpdb->insert(
-                    $wpdb->terms,
-                    array(
-                        'name' => $term->getName(),
-                        'slug' => $slug
-                    )
-                );
-                $slug = $baseSlug . $slugIndex;
-                $slugIndex += 1;
-            }
-            $appId = $wpdb->insert_id;
-            $term->setAppId($appId);
         }
-        return $appId;
     }
 
     /**
