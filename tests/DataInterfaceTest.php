@@ -6,10 +6,16 @@ require_once '../DataInterface.php';
  */
 class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 {
-    const FOO_WP_ID = 3;
     const FOO_FOLK_ID = 300;
 
     public $plugin_slug = 'folksaurus-wp';
+
+    /**
+     * The term_id for the term "Foo", which is set up in the setUp method.
+     *
+     * @var int
+     */
+    protected $_fooTermId;
 
     public function setUp()
     {
@@ -34,23 +40,17 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $fooTermArray = $this->_getFolksaurusTermArray();
 
         // Add existing term "Foo".
+        $fooTermIds = wp_insert_term('Foo', 'category');
+        $this->_fooTermId = $fooTermIds['term_id'];
         $wpdb->insert(
             FOLKSAURUS_TERM_DATA_TABLE,
             array(
-                'term_id'        => self::FOO_WP_ID,
+                'term_id'        => $this->_fooTermId,
                 'folksaurus_id'  => self::FOO_FOLK_ID,
                 'scope_note'     => $fooTermArray['scope_note'],
                 'last_retrieved' => $fooTermArray['last_retrieved'],
                 'preferred'      => 1,
                 'deleted'        => 0
-            )
-        );
-        $wpdb->insert(
-            $wpdb->terms,
-            array(
-                'term_id' => self::FOO_WP_ID,
-                'name'    => 'Foo',
-                'slug'    => 'foo'
             )
         );
     }
@@ -71,7 +71,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             'related'        => array(),
             'used_for'       => array(),
             'use'            => array(),
-            'app_id'         => self::FOO_WP_ID,
+            'app_id'         => $this->_fooTermId,
             'last_retrieved' => strtotime('0000-00-00 UTC')
         );
         return $termArray;
@@ -99,14 +99,14 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         global $wpdb;
 
         $dataInterface = new FolksaurusWP_DataInterface();
-        $dataInterface->deleteTerm(self::FOO_WP_ID);
+        $dataInterface->deleteTerm($this->_fooTermId);
 
         $deleted = $wpdb->get_var(
             $wpdb->prepare(
                 sprintf(
                     'SELECT deleted FROM %s WHERE term_id = %d',
                     FOLKSAURUS_TERM_DATA_TABLE,
-                    self::FOO_WP_ID
+                    $this->_fooTermId
                 )
             )
         );
@@ -116,7 +116,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     public function testGetTermByAppIdReturnsTermArray()
     {
         $dataInterface = new FolksaurusWP_DataInterface();
-        $termArray = $dataInterface->getTermByAppId(self::FOO_WP_ID);
+        $termArray = $dataInterface->getTermByAppId($this->_fooTermId);
 
         $fooTermArray = $this->_getFolksaurusTermArray();
 
@@ -317,11 +317,16 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     {
         global $wpdb;
 
+        $barTermIds = wp_insert_term('Bar', 'category');
+        $barTermId = $barTermIds['term_id'];
+        wp_insert_term('SuperBar', 'category');
+        wp_insert_term('SubBar', 'category');
+        wp_insert_term('RelBar', 'category');
+        wp_insert_term('UsedForBar', 'category');
+
         $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
-
-        $barTermId = 4;
 
         $term = new Folksaurus\Term(
             array(
@@ -422,26 +427,12 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         global $wpdb;
 
         // Set up two existing relationships.  One will be removed.
-        $wpdb->insert(
-            $wpdb->terms,
-            array(
-                'term_id' => '4',
-                'name'    => 'Bar',
-                'slug'    => 'bar'
-            )
-        );
-        $wpdb->insert(
-            $wpdb->terms,
-            array(
-                'term_id' => '5',
-                'name'    => 'Phoo',
-                'slug'    => 'phoo'
-            )
-        );
+        $phooTermIds = wp_insert_term('Phoo', 'category');
+        $barTermIds  = wp_insert_term('Bar', 'category');
         $wpdb->insert(
             FOLKSAURUS_TERM_DATA_TABLE,
             array(
-                'term_id'       => '4',
+                'term_id'       => $phooTermIds['term_id'],
                 'folksaurus_id' => '400',
                 'preferred'     => '1'
             )
@@ -449,7 +440,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $wpdb->insert(
             FOLKSAURUS_TERM_DATA_TABLE,
             array(
-                'term_id'       => '5',
+                'term_id'       => $barTermIds['term_id'],
                 'folksaurus_id' => '500',
                 'preferred'     => '1'
             )
@@ -459,17 +450,17 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $wpdb->insert(
             FOLKSAURUS_TERM_REL_TABLE,
             array(
-                'term_id'    => self::FOO_WP_ID,
+                'term_id'    => $this->_fooTermId,
                 'rel_type'   => 'RT',
-                'related_id' => '4'
+                'related_id' => $phooTermIds['term_id']
             )
         );
         $wpdb->insert(
             FOLKSAURUS_TERM_REL_TABLE,
             array(
-                'term_id'    => self::FOO_WP_ID,
+                'term_id'    => $this->_fooTermId,
                 'rel_type'   => 'RT',
-                'related_id' => '5'
+                'related_id' => $barTermIds['term_id']
             )
         );
 
@@ -486,13 +477,13 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                 'narrower'       => array(),
                 'related'        => array(
                     array(
-                        'id'   => '500',
+                        'id'   => '400',
                         'name' => 'Phoo'
                     )
                 ),
                 'used_for'       => array(),
                 'use'            => array(),
-                'app_id'         => self::FOO_WP_ID,
+                'app_id'         => $this->_fooTermId,
                 'last_retrieved' => 0
             ),
             $mockTermManager
@@ -507,9 +498,9 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         $this->assertEquals(
             array(
                 array(
-                    'term_id'    => self::FOO_WP_ID,
+                    'term_id'    => $this->_fooTermId,
                     'rel_type'   => 'RT',
-                    'related_id' => '5'
+                    'related_id' => $phooTermIds['term_id']
                 )
             ),
             $results
@@ -543,7 +534,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                         'name' => 'RealFooToo'
                     )
                 ),
-                'app_id'         => self::FOO_WP_ID,
+                'app_id'         => $this->_fooTermId,
                 'last_retrieved' => 0
             ),
             $mockTermManager
@@ -552,7 +543,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         // Assert begins non-ambiguous.
         $ambiguous = $wpdb->get_var(
             'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(0, $ambiguous);
 
@@ -561,7 +552,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         $ambiguous = $wpdb->get_var(
             'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(1, $ambiguous);
     }
@@ -576,7 +567,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                 'ambiguous' => '1'
             ),
             array(
-                'term_id' => self::FOO_WP_ID
+                'term_id' => $this->_fooTermId
             )
         );
 
@@ -594,7 +585,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                 'related'        => array(),
                 'used_for'       => array(),
                 'use'            => array(),
-                'app_id'         => self::FOO_WP_ID,
+                'app_id'         => $this->_fooTermId,
                 'last_retrieved' => 0
             ),
             $mockTermManager
@@ -603,7 +594,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         // Assert begins ambiguous.
         $ambiguous = $wpdb->get_var(
             'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(1, $ambiguous);
 
@@ -612,7 +603,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         $ambiguous = $wpdb->get_var(
             'SELECT ambiguous FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(0, $ambiguous);
     }
@@ -640,7 +631,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                         'name' => 'RealFoo'
                     )
                 ),
-                'app_id'         => self::FOO_WP_ID,
+                'app_id'         => $this->_fooTermId,
                 'last_retrieved' => 0
             ),
             $mockTermManager
@@ -649,7 +640,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         // Assert begins as preferred.
         $preferred = $wpdb->get_var(
             'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(1, $preferred);
 
@@ -658,7 +649,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         $preferred = $wpdb->get_var(
             'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(0, $preferred);
     }
@@ -673,7 +664,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                 'preferred' => '0'
             ),
             array(
-                'term_id' => self::FOO_WP_ID
+                'term_id' => $this->_fooTermId
             )
         );
 
@@ -696,7 +687,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                     )
                 ),
                 'use'            => array(),
-                'app_id'         => self::FOO_WP_ID,
+                'app_id'         => $this->_fooTermId,
                 'last_retrieved' => 0
             ),
             $mockTermManager
@@ -705,7 +696,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         // Assert begins as non-preferred.
         $preferred = $wpdb->get_var(
             'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(0, $preferred);
 
@@ -714,15 +705,13 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         $preferred = $wpdb->get_var(
             'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE
-            . ' WHERE term_id = ' . self::FOO_WP_ID
+            . ' WHERE term_id = ' . $this->_fooTermId
         );
         $this->assertEquals(1, $preferred);
     }
 
     public function testWpObjectRelationshipsUpdatedWhenPreferredTermChanges()
     {
-        $this->markTestIncomplete();
-
         global $wpdb;
 
         // Initial data has category "Uncategorized" related to object_id 1.
@@ -737,12 +726,54 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
                 'deleted'       => '0'
             )
         );
+        // Add "Not Categorized" term, which will be the new preferred term.
+        $termIds = wp_insert_term('Not Categorized', 'category');
+        $notCategorizedTermId = $termIds['term_id'];
+        $notCategorizedTaxonomyId = $termIds['term_taxonomy_id'];
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'       => $notCategorizedTermId,
+                'folksaurus_id' => '400',
+                'preferred'     => '1',
+                'ambiguous'     => '0',
+                'deleted'       => '0'
+            )
+        );
 
         // Save new version of term which is now non-preferred.
 
         $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
+
+        $mockTermManager2 = clone $mockTermManager;
+
+        $notCategorizedTerm = new Folksaurus\Term(
+            array(
+                'id'             => '400',
+                'name'           => 'Not Categorized',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(
+                    array(
+                        'id'   => '100',
+                        'name' => 'Uncategorized'
+                    )
+                ),
+                'use'            => array(),
+                'app_id'         => $notCategorizedTermId,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager2
+        );
+
+        $mockTermManager->expects($this->once())
+            ->method('getTermByFolksaurusId')
+            ->with($this->equalTo('400'))
+            ->will($this->returnValue($notCategorizedTerm));
 
         $term = new Folksaurus\Term(
             array(
@@ -767,6 +798,22 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         $dataInterface = new FolksaurusWP_DataInterface();
         $dataInterface->saveTerm($term);
+
+        $results = $wpdb->get_results(
+            'SELECT * FROM ' . $wpdb->term_relationships .
+            ' WHERE object_id = 1 AND term_taxonomy_id = ' . $notCategorizedTaxonomyId,
+            ARRAY_A
+        );
+        $this->assertEquals(
+            array(
+                array(
+                    'object_id'        => '1',
+                    'term_taxonomy_id' => $notCategorizedTaxonomyId,
+                    'term_order'       => '0'
+                ),
+            ),
+            $results
+        );
     }
 
     public function testParentIdValuesSetInWpTaxonomyTableForNarrowerAndBroaderTerms()

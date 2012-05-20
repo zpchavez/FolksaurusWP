@@ -65,8 +65,8 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
             $appId = $term->getAppId();
             $wasPreferred = $wpdb->get_var(
                 $wpdb->prepare(
-                    'SELECT preferred FROM %s WHERE term_id = %d',
-                    FOLKSAURUS_TERM_DATA_TABLE,
+                    'SELECT preferred FROM ' . FOLKSAURUS_TERM_DATA_TABLE .
+                    ' WHERE term_id = %d',
                     $appId
                 )
             );
@@ -160,9 +160,11 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
      * Insert a placeholder term if the term does not already exist.
      *
      * @param Folksaurus\TermSummary $termSummary
+     * @param string $taxonomy  The taxonomy to which the placeholder term will be assigned.
      * @return int|bool  The app_id, or false if unable to create the term.
      */
-    protected function _insertTermPlaceholderIfNotExists(Folksaurus\TermSummary $termSummary)
+    protected function _insertTermPlaceholderIfNotExists(Folksaurus\TermSummary $termSummary,
+                                                         $taxonomy)
     {
         global $wpdb;
 
@@ -174,24 +176,29 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
             )
         );
         if (!$appId) {
-            $wpdb->insert(
-                $wpdb->terms,
-                array(
-                    'name' => $termSummary->getName(),
-                    'slug' => sanitize_title($termSummary->getName())
+            $appId = $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT term_id FROM ' . $wpdb->terms .
+                    ' WHERE name = %s',
+                    $termSummary->getName()
                 )
             );
-            $appId = $wpdb->insert_id;
-            if ($appId) {
-                $wpdb->insert(
-                    FOLKSAURUS_TERM_DATA_TABLE,
-                    array(
-                        'term_id'        => $appId,
-                        'folksaurus_id'  => $termSummary->getId(),
-                        'last_retrieved' => 0,
-                    )
-                );
+        }
+        if (!$appId) {
+            $termIds = wp_insert_term($termSummary->getName(), $taxonomy);
+            if ($termIds) {
+                $appId = $termIds['term_id'];
             }
+        }
+        if ($appId) {
+            $wpdb->insert(
+                FOLKSAURUS_TERM_DATA_TABLE,
+                array(
+                    'term_id'        => $appId,
+                    'folksaurus_id'  => $termSummary->getId(),
+                    'last_retrieved' => 0,
+                )
+            );
         }
         return $appId;
     }
@@ -217,8 +224,20 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
             )
         );
 
+        // Need to know which taxonomy to assign new terms.
+        // Should be the same as the term being saved.
+        $taxonomy = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT taxonomy FROM ' . $wpdb->term_taxonomy . ' WHERE term_id = %d',
+                $term->getAppId()
+            )
+        );
+        if (!$taxonomy) {
+            return;
+        }
+
         foreach ($term->getBroaderTerms() as $broader) {
-            $appId = $this->_insertTermPlaceholderIfNotExists($broader);
+            $appId = $this->_insertTermPlaceholderIfNotExists($broader, $taxonomy);
             if ($appId) {
                 $wpdb->insert(
                     FOLKSAURUS_TERM_REL_TABLE,
@@ -238,7 +257,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
         }
 
         foreach ($term->getNarrowerTerms() as $narrower) {
-            $appId = $this->_insertTermPlaceholderIfNotExists($narrower);
+            $appId = $this->_insertTermPlaceholderIfNotExists($narrower, $taxonomy);
             if ($appId) {
                 $wpdb->insert(
                     FOLKSAURUS_TERM_REL_TABLE,
@@ -258,7 +277,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
         }
 
         foreach ($term->getUsedForTerms() as $usedFor) {
-            $appId = $this->_insertTermPlaceholderIfNotExists($usedFor);
+            $appId = $this->_insertTermPlaceholderIfNotExists($usedFor, $taxonomy);
             if ($appId) {
                 $wpdb->insert(
                     FOLKSAURUS_TERM_REL_TABLE,
@@ -272,7 +291,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
         }
 
         foreach ($term->getUseTerms() as $use) {
-            $appId = $this->_insertTermPlaceholderIfNotExists($use);
+            $appId = $this->_insertTermPlaceholderIfNotExists($use, $taxonomy);
             if ($appId) {
                 $wpdb->insert(
                     FOLKSAURUS_TERM_REL_TABLE,
@@ -286,7 +305,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
         }
 
         foreach ($term->getRelatedTerms() as $related) {
-            $appId = $this->_insertTermPlaceholderIfNotExists($related);
+            $appId = $this->_insertTermPlaceholderIfNotExists($related, $taxonomy);
             if ($appId) {
                 // Just to be consistent, set the lower ID as term_id.
                 $wpdb->insert(
@@ -312,21 +331,25 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
     protected function _updateTermToObjectRelationshipsIfNecessary(Folksaurus\Term $term,
                                                                    $wasPreferred)
     {
+        global $wpdb;
+
         $isNonPreferred = $term->getStatus() == Folksaurus\Term::STATUS_NONPREFERRED;
 
         if ($wasPreferred && !$term->isAmbiguous() && $isNonPreferred) {
             $oldTermTaxonomyId = $wpdb->get_var(
                 $wpdb->prepare(
-                    'SELECT term_taxonomy_id FROM %s WHERE term_id = %d',
-                    $wpdb->term_taxonomy,
+                    'SELECT term_taxonomy_id FROM ' . $wpdb->term_taxonomy . ' WHERE term_id = %d',
                     $term->getAppId()
                 )
             );
+            $preferredTerm = $term->getPreferred();
+            if (!$preferredTerm) {
+                return;
+            }
             $newTermTaxonomyId = $wpdb->get_var(
                 $wpdb->prepare(
-                    'SELECT term_taxonomy_id FROM %s WHERE term_id = %d',
-                    $wpdb->term_taxonomy,
-                    $term->getPreferred()->getAppId()
+                    'SELECT term_taxonomy_id FROM ' . $wpdb->term_taxonomy . ' WHERE term_id = %d',
+                    $preferredTerm->getAppId()
                 )
             );
             if ($oldTermTaxonomyId && $newTermTaxonomyId) {
