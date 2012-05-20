@@ -730,10 +730,129 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     public function testWpObjectRelationshipsUpdatedWhenPreferredTermChanges()
     {
         $this->markTestIncomplete();
+
+        global $wpdb;
+
+        // Initial data has category "Uncategorized" related to object_id 1.
+        // Add folksaurus_term_data row for "Uncategorized".
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'       => '1',
+                'folksaurus_id' => '100',
+                'preferred'     => '1',
+                'ambiguous'     => '0',
+                'deleted'       => '0'
+            )
+        );
+
+        // Save new version of term which is now non-preferred.
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => '100',
+                'name'           => 'Uncategorized',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(
+                    array(
+                        'id'   => '400',
+                        'name' => 'Not Categorized'
+                    )
+                ),
+                'app_id'         => '1',
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
     }
 
     public function testParentIdValuesSetInWpTaxonomyTableForNarrowerAndBroaderTerms()
     {
-        $this->markTestIncomplete();
+        global $wpdb;
+
+        $barIds = wp_insert_term('Bar', 'post_tag');
+        $subBarIds = wp_insert_term('SubBar', 'post_tag');
+
+        $barTermId = $barIds['term_id'];
+        $subBarTermId = $subBarIds['term_id'];
+
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'        => $barTermId,
+                'folksaurus_id'  => '400',
+                'scope_note'     => '',
+                'last_retrieved' => 0,
+                'preferred'      => 1,
+                'deleted'        => 0
+            )
+        );
+        $wpdb->insert(
+            FOLKSAURUS_TERM_DATA_TABLE,
+            array(
+                'term_id'        => $subBarTermId,
+                'folksaurus_id'  => '500',
+                'scope_note'     => '',
+                'last_retrieved' => 0,
+                'preferred'      => 1,
+                'deleted'        => 0
+            )
+        );
+
+        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $term = new Folksaurus\Term(
+            array(
+                'id'             => '400',
+                'name'           => 'Bar',
+                'scope_note'     => '',
+                'broader'        => array(),
+                'narrower'       => array(
+                    array(
+                        'id'   => '500',
+                        'name' => 'SubBar'
+                    )
+                ),
+                'related'        => array(),
+                'used_for'       => array(),
+                'use'            => array(),
+                'app_id'         => $barTermId,
+                'last_retrieved' => 0
+            ),
+            $mockTermManager
+        );
+
+        // Assert parent ID not set before saving.
+
+        $subBarParentId = $wpdb->get_var(
+            'SELECT parent FROM ' . $wpdb->term_taxonomy .
+            ' WHERE term_id = ' . $subBarTermId
+        );
+        $this->assertEquals(0, $subBarParentId);
+
+        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface->saveTerm($term);
+
+        $terms = $wpdb->get_results('SELECT * FROM ' . $wpdb->terms);
+
+        $subBarParentId = $wpdb->get_var(
+            'SELECT parent FROM ' . $wpdb->term_taxonomy .
+            ' WHERE term_id = ' . $subBarTermId
+        );
+        $this->assertEquals($barTermId, $subBarParentId);
     }
+
 }
