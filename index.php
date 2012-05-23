@@ -14,9 +14,8 @@ define('FOLKSAURUS_WP_VERSION', 0.1);
 define('FOLKSAURUS_TERM_DATA_TABLE', $wpdb->prefix . 'folksaurus_term_data');
 define('FOLKSAURUS_TERM_REL_TABLE', $wpdb->prefix . 'folksaurus_term_relationships');
 
-//add_action('plugins_loaded', 'folksaurusUpdateDBCheck');
-//register_activation_hook(__FILE__, 'folksaurusSetupTables');
-add_action('plugins_loaded', 'folksaurusSetupTables');
+add_action('plugins_loaded', 'folksaurusUpdateDBCheck');
+register_activation_hook(__FILE__, 'folksaurusSetupTables');
 
 /**
  * Set up tables needed by Folksaurus WP
