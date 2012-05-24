@@ -1,9 +1,10 @@
 <?php
+namespace FolksaurusWP;
 
 /**
  * Implementation of Folksaurus\DataInterface
  */
-class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
+class DataInterface implements \Folksaurus\DataInterface
 {
 
     public function deleteTerm($appId)
@@ -55,7 +56,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
         return false;
     }
 
-    public function saveTerm(Folksaurus\Term $term)
+    public function saveTerm(\Folksaurus\Term $term)
     {
         global $wpdb;
 
@@ -91,7 +92,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
      *
      * @param Folksaurus\Term $term
      */
-    protected function _updateTermInWpTerms(Folksaurus\Term $term)
+    protected function _updateTermInWpTerms(\Folksaurus\Term $term)
     {
         global $wpdb;
 
@@ -128,7 +129,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
      * @param Folksaurus\Term $term
      * @return bool
      */
-    protected function _updateOrInsertTermInFolksaurusTermData(Folksaurus\Term $term)
+    protected function _updateOrInsertTermInFolksaurusTermData(\Folksaurus\Term $term)
     {
         global $wpdb;
 
@@ -148,7 +149,7 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
                 $term->getId(),
                 $term->getScopeNote(),
                 $term->getLastRetrievedDatetime(),
-                $term->getStatus() != Folksaurus\Term::STATUS_NONPREFERRED,
+                $term->getStatus() != \Folksaurus\Term::STATUS_NONPREFERRED,
                 $term->isAmbiguous(),
                 false
             )
@@ -159,11 +160,11 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
     /**
      * Insert a placeholder term if the term does not already exist.
      *
-     * @param Folksaurus\TermSummary $termSummary
+     * @param \Folksaurus\TermSummary $termSummary
      * @param string $taxonomy  The taxonomy to which the placeholder term will be assigned.
      * @return int|bool  The app_id, or false if unable to create the term.
      */
-    protected function _insertTermPlaceholderIfNotExists(Folksaurus\TermSummary $termSummary,
+    protected function _insertTermPlaceholderIfNotExists(\Folksaurus\TermSummary $termSummary,
                                                          $taxonomy)
     {
         global $wpdb;
@@ -208,9 +209,9 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
      *
      * Create placeholder terms for any terms not in wp_terms.
      *
-     * @param Folksaurus\Term $term
+     * @param \Folksaurus\Term $term
      */
-    protected function _saveRelationships(Folksaurus\Term $term)
+    protected function _saveRelationships(\Folksaurus\Term $term)
     {
         global $wpdb;
 
@@ -325,15 +326,15 @@ class FolksaurusWP_DataInterface implements Folksaurus\DataInterface
      * If term has become non-preferred, update objects related to the term to
      * instead relate to the preferred term.
      *
-     * @param Folksaurus\Term $term
+     * @param \Folksaurus\Term $term
      * @param bool $wasPreferred  Whether the term was preferred before the changes.
      */
-    protected function _updateTermToObjectRelationshipsIfNecessary(Folksaurus\Term $term,
+    protected function _updateTermToObjectRelationshipsIfNecessary(\Folksaurus\Term $term,
                                                                    $wasPreferred)
     {
         global $wpdb;
 
-        $isNonPreferred = $term->getStatus() == Folksaurus\Term::STATUS_NONPREFERRED;
+        $isNonPreferred = $term->getStatus() == \Folksaurus\Term::STATUS_NONPREFERRED;
 
         if ($wasPreferred && !$term->isAmbiguous() && $isNonPreferred) {
             $oldTermTaxonomyId = $wpdb->get_var(

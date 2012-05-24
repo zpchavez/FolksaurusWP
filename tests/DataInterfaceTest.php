@@ -1,10 +1,12 @@
 <?php
+namespace FolksaurusWP;
+
 require_once '../DataInterface.php';
 
 /**
  * Tests for the plugin's Folksaurus\DataInterface implementation.
  */
-class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
+class DataInterfaceTest extends \WP_UnitTestCase
 {
     const FOO_FOLK_ID = 300;
 
@@ -84,11 +86,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
      */
     protected function _getFolksaurusTermObject()
     {
-        $mockManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             $this->_getFolksaurusTermArray(),
             $mockManager
         );
@@ -98,7 +100,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     {
         global $wpdb;
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->deleteTerm($this->_fooTermId);
 
         $deleted = $wpdb->get_var(
@@ -115,7 +117,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
     public function testGetTermByAppIdReturnsTermArray()
     {
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $termArray = $dataInterface->getTermByAppId($this->_fooTermId);
 
         $fooTermArray = $this->_getFolksaurusTermArray();
@@ -126,7 +128,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
     public function testGetTermByFolksaurusIdReturnsTermArray()
     {
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $termArray = $dataInterface->getTermByFolksaurusId(self::FOO_FOLK_ID);
 
         $fooTermArray = $this->_getFolksaurusTermArray();
@@ -137,7 +139,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
     public function testGetTermByNameReturnsTermArray()
     {
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $termArray = $dataInterface->getTermByName('Foo');
 
         $fooTermArray = $this->_getFolksaurusTermArray();
@@ -150,11 +152,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     {
         global $wpdb;
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -170,7 +172,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             $mockTermManager
         );
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $wpRow = $wpdb->get_row(
@@ -203,11 +205,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -223,7 +225,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             $mockTermManager
         );
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $row = $wpdb->get_row(
@@ -266,11 +268,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Baz',
@@ -286,7 +288,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             $mockTermManager
         );
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $wpRow = $wpdb->get_row(
@@ -324,11 +326,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         wp_insert_term('RelBar', 'category');
         wp_insert_term('UsedForBar', 'category');
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -364,7 +366,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             $mockTermManager
         );
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $superBarTermId = $wpdb->get_var(
@@ -464,11 +466,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -489,7 +491,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             $mockTermManager
         );
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $results = $wpdb->get_results('SELECT * FROM ' . FOLKSAURUS_TERM_REL_TABLE, ARRAY_A);
@@ -511,11 +513,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     {
         global $wpdb;
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -547,7 +549,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         );
         $this->assertEquals(0, $ambiguous);
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $ambiguous = $wpdb->get_var(
@@ -571,11 +573,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -598,7 +600,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         );
         $this->assertEquals(1, $ambiguous);
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $ambiguous = $wpdb->get_var(
@@ -612,11 +614,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
     {
         global $wpdb;
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -644,7 +646,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         );
         $this->assertEquals(1, $preferred);
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $preferred = $wpdb->get_var(
@@ -668,11 +670,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -700,7 +702,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         );
         $this->assertEquals(0, $preferred);
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $preferred = $wpdb->get_var(
@@ -743,13 +745,13 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
 
         // Save new version of term which is now non-preferred.
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
         $mockTermManager2 = clone $mockTermManager;
 
-        $notCategorizedTerm = new Folksaurus\Term(
+        $notCategorizedTerm = new \Folksaurus\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Not Categorized',
@@ -775,7 +777,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             ->with($this->equalTo('400'))
             ->will($this->returnValue($notCategorizedTerm));
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => '100',
                 'name'           => 'Uncategorized',
@@ -796,7 +798,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             $mockTermManager
         );
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $results = $wpdb->get_results(
@@ -849,11 +851,11 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new Folksaurus\Term(
+        $term = new \Folksaurus\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -882,7 +884,7 @@ class FolksaurusWP_DataInterfaceTest extends WP_UnitTestCase
         );
         $this->assertEquals(0, $subBarParentId);
 
-        $dataInterface = new FolksaurusWP_DataInterface();
+        $dataInterface = new DataInterface();
         $dataInterface->saveTerm($term);
 
         $terms = $wpdb->get_results('SELECT * FROM ' . $wpdb->terms);
