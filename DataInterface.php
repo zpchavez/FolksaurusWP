@@ -2,9 +2,9 @@
 namespace FolksaurusWP;
 
 /**
- * Implementation of Folksaurus\DataInterface
+ * Implementation of PholksaurusLib\DataInterface
  */
-class DataInterface implements \Folksaurus\DataInterface
+class DataInterface implements \PholksaurusLib\DataInterface
 {
 
     public function deleteTerm($appId)
@@ -56,7 +56,7 @@ class DataInterface implements \Folksaurus\DataInterface
         return false;
     }
 
-    public function saveTerm(\Folksaurus\Term $term)
+    public function saveTerm(\PholksaurusLib\Term $term)
     {
         global $wpdb;
 
@@ -90,9 +90,9 @@ class DataInterface implements \Folksaurus\DataInterface
      *
      * @todo delete
      *
-     * @param Folksaurus\Term $term
+     * @param PholksaurusLib\Term $term
      */
-    protected function _updateTermInWpTerms(\Folksaurus\Term $term)
+    protected function _updateTermInWpTerms(\PholksaurusLib\Term $term)
     {
         global $wpdb;
 
@@ -126,10 +126,10 @@ class DataInterface implements \Folksaurus\DataInterface
     /**
      * Update or insert term data in the folksaurus term data table.
      *
-     * @param Folksaurus\Term $term
+     * @param PholksaurusLib\Term $term
      * @return bool
      */
-    protected function _updateOrInsertTermInFolksaurusTermData(\Folksaurus\Term $term)
+    protected function _updateOrInsertTermInFolksaurusTermData(\PholksaurusLib\Term $term)
     {
         global $wpdb;
 
@@ -149,7 +149,7 @@ class DataInterface implements \Folksaurus\DataInterface
                 $term->getId(),
                 $term->getScopeNote(),
                 $term->getLastRetrievedDatetime(),
-                $term->getStatus() != \Folksaurus\Term::STATUS_NONPREFERRED,
+                $term->getStatus() != \PholksaurusLib\Term::STATUS_NONPREFERRED,
                 $term->isAmbiguous(),
                 false
             )
@@ -160,11 +160,11 @@ class DataInterface implements \Folksaurus\DataInterface
     /**
      * Insert a placeholder term if the term does not already exist.
      *
-     * @param \Folksaurus\TermSummary $termSummary
+     * @param \PholksaurusLib\TermSummary $termSummary
      * @param string $taxonomy  The taxonomy to which the placeholder term will be assigned.
      * @return int|bool  The app_id, or false if unable to create the term.
      */
-    protected function _insertTermPlaceholderIfNotExists(\Folksaurus\TermSummary $termSummary,
+    protected function _insertTermPlaceholderIfNotExists(\PholksaurusLib\TermSummary $termSummary,
                                                          $taxonomy)
     {
         global $wpdb;
@@ -209,9 +209,9 @@ class DataInterface implements \Folksaurus\DataInterface
      *
      * Create placeholder terms for any terms not in wp_terms.
      *
-     * @param \Folksaurus\Term $term
+     * @param \PholksaurusLib\Term $term
      */
-    protected function _saveRelationships(\Folksaurus\Term $term)
+    protected function _saveRelationships(\PholksaurusLib\Term $term)
     {
         global $wpdb;
 
@@ -326,15 +326,15 @@ class DataInterface implements \Folksaurus\DataInterface
      * If term has become non-preferred, update objects related to the term to
      * instead relate to the preferred term.
      *
-     * @param \Folksaurus\Term $term
+     * @param \PholksaurusLib\Term $term
      * @param bool $wasPreferred  Whether the term was preferred before the changes.
      */
-    protected function _updateTermToObjectRelationshipsIfNecessary(\Folksaurus\Term $term,
+    protected function _updateTermToObjectRelationshipsIfNecessary(\PholksaurusLib\Term $term,
                                                                    $wasPreferred)
     {
         global $wpdb;
 
-        $isNonPreferred = $term->getStatus() == \Folksaurus\Term::STATUS_NONPREFERRED;
+        $isNonPreferred = $term->getStatus() == \PholksaurusLib\Term::STATUS_NONPREFERRED;
 
         if ($wasPreferred && !$term->isAmbiguous() && $isNonPreferred) {
             $oldTermTaxonomyId = $wpdb->get_var(

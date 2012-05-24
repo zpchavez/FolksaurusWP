@@ -4,7 +4,7 @@ namespace FolksaurusWP;
 require_once '../DataInterface.php';
 
 /**
- * Tests for the plugin's Folksaurus\DataInterface implementation.
+ * Tests for the plugin's PholksaurusLib\DataInterface implementation.
  */
 class DataInterfaceTest extends \WP_UnitTestCase
 {
@@ -80,17 +80,17 @@ class DataInterfaceTest extends \WP_UnitTestCase
     }
 
     /**
-     * Get a Folksaurus\Term object for the term "Foo".
+     * Get a PholksaurusLib\Term object for the term "Foo".
      *
-     * @return Folksaurus\Term
+     * @return PholksaurusLib\Term
      */
     protected function _getFolksaurusTermObject()
     {
-        $mockManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             $this->_getFolksaurusTermArray(),
             $mockManager
         );
@@ -152,11 +152,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
     {
         global $wpdb;
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -205,11 +205,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -268,11 +268,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Baz',
@@ -326,11 +326,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
         wp_insert_term('RelBar', 'category');
         wp_insert_term('UsedForBar', 'category');
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',
@@ -466,11 +466,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -513,11 +513,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
     {
         global $wpdb;
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -573,11 +573,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -614,11 +614,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
     {
         global $wpdb;
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -670,11 +670,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => self::FOO_FOLK_ID,
                 'name'           => 'Foo',
@@ -745,13 +745,13 @@ class DataInterfaceTest extends \WP_UnitTestCase
 
         // Save new version of term which is now non-preferred.
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
         $mockTermManager2 = clone $mockTermManager;
 
-        $notCategorizedTerm = new \Folksaurus\Term(
+        $notCategorizedTerm = new \PholksaurusLib\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Not Categorized',
@@ -777,7 +777,7 @@ class DataInterfaceTest extends \WP_UnitTestCase
             ->with($this->equalTo('400'))
             ->will($this->returnValue($notCategorizedTerm));
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => '100',
                 'name'           => 'Uncategorized',
@@ -851,11 +851,11 @@ class DataInterfaceTest extends \WP_UnitTestCase
             )
         );
 
-        $mockTermManager = $this->getMockBuilder('\Folksaurus\TermManager')
+        $mockTermManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $term = new \Folksaurus\Term(
+        $term = new \PholksaurusLib\Term(
             array(
                 'id'             => '400',
                 'name'           => 'Bar',

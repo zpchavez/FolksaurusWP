@@ -77,7 +77,7 @@ function folksaurusUpdateDBCheck()
 function folksaurusGetTerms(array $terms)
 {
     $dataInterface = new FolksaurusWP\DataInterface();
-    $termManager = new Folksaurus\TermManager($dataInterface);
+    $termManager = new PholksaurusLib\TermManager($dataInterface);
     foreach ($terms as $term) {
         $termManager->getTermByAppId($term->term_id);
     }
