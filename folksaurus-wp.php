@@ -70,14 +70,6 @@ function folksaurusUpdateDBCheck()
 }
 
 /**
- * Return true if
- */
-function folksaurusTermInfoExists()
-{
-
-}
-
-/**
  * Get term data from Folksaurus.
  *
  * @param array $terms

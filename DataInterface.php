@@ -381,7 +381,7 @@ class DataInterface implements \Folksaurus\DataInterface
                     folksaurus_id,
                     scope_note,
                     deleted,
-                    last_retrieved
+                    IFNULL(last_retrieved, 0) AS last_retrieved
                  FROM ' . $wpdb->terms . ' AS wp_terms
                  LEFT JOIN ' . FOLKSAURUS_TERM_DATA_TABLE . ' AS folk_terms
                  ON wp_terms.term_id = folk_terms.term_id
