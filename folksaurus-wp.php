@@ -10,11 +10,16 @@ Author URI: http://zacharychavez.com
 
 global $wpdb;
 
+require 'PholksaurusLib/init.php';
+require 'DataInterface.php';
+
 define('FOLKSAURUS_WP_VERSION', 0.1);
 define('FOLKSAURUS_TERM_DATA_TABLE', $wpdb->prefix . 'folksaurus_term_data');
 define('FOLKSAURUS_TERM_REL_TABLE', $wpdb->prefix . 'folksaurus_term_relationships');
 
 add_action('plugins_loaded', 'folksaurusUpdateDBCheck');
+add_action('get_the_tags', 'folksaurusGetTerms');
+add_action('get_the_categories', 'folksaurusGetTerms');
 register_activation_hook(__FILE__, 'folksaurusSetupTables');
 
 /**
@@ -61,5 +66,27 @@ function folksaurusUpdateDBCheck()
 {
     if (get_site_option('folksaurus_wp_version') != FOLKSAURUS_WP_VERSION) {
         folksaurusSetupTables();
+    }
+}
+
+/**
+ * Return true if
+ */
+function folksaurusTermInfoExists()
+{
+
+}
+
+/**
+ * Get term data from Folksaurus.
+ *
+ * @param array $terms
+ */
+function folksaurusGetTerms(array $terms)
+{
+    $dataInterface = new FolksaurusWP\DataInterface();
+    $termManager = new Folksaurus\TermManager($dataInterface);
+    foreach ($terms as $term) {
+        $termManager->getTermByAppId($term->term_id);
     }
 }
