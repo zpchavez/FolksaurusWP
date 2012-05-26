@@ -80,9 +80,13 @@ function folksaurusGetTerms($terms)
         return;
     }
     $dataInterface = new FolksaurusWP\DataInterface();
-    $termManager = new PholksaurusLib\TermManager($dataInterface);
-    foreach ($terms as $term) {
-        $termManager->getTermByAppId($term->term_id);
+    try {
+        $termManager = new PholksaurusLib\TermManager($dataInterface);
+        foreach ($terms as $term) {
+            $termManager->getTermByAppId($term->term_id);
+        }
+    } catch (\PholksaurusLib\Exception $e) {
+        // Ignore errors.
     }
     return $terms;
 }
