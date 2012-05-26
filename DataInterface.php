@@ -398,7 +398,7 @@ class DataInterface implements \PholksaurusLib\DataInterface
 
         $termArray = array(
             'id'             => $row['folksaurus_id'],
-            'name'           => $row['name'],
+            'name'           => html_entity_decode($row['name']),
             'scope_note'     => $row['scope_note'],
             'broader'        => $this->_getBroaderTerms($row['term_id']),
             'narrower'       => $this->_getNarrowerTerms($row['term_id']),
