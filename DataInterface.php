@@ -105,7 +105,7 @@ class DataInterface implements \PholksaurusLib\DataInterface
         $appId = $term->getAppId();
         if ($appId) {
             $updated = false;
-            while (!$updated && $slugIndex < 10) {
+            while ($updated === false && $slugIndex < 10) {
                 $updated = $wpdb->update(
                     $wpdb->terms,
                     array(
