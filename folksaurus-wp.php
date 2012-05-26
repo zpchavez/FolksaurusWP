@@ -74,11 +74,15 @@ function folksaurusUpdateDBCheck()
  *
  * @param array $terms
  */
-function folksaurusGetTerms(array $terms)
+function folksaurusGetTerms($terms)
 {
+    if (!$terms) {
+        return;
+    }
     $dataInterface = new FolksaurusWP\DataInterface();
     $termManager = new PholksaurusLib\TermManager($dataInterface);
     foreach ($terms as $term) {
         $termManager->getTermByAppId($term->term_id);
     }
+    return $terms;
 }
