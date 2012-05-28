@@ -1,12 +1,12 @@
 <?php
 /*
 Plugin Name: Folksaurus WP
-Plugin URI:
+Plugin URI: https://github.com/zpchavez/FolksaurusWP
 Description: Use Folksaurus for tags and categories.  Requires PHP 5.3.0 or higher.
 Author: Zachary Chavez
 Version: 0.1
 Author URI: http://zacharychavez.com
-License:
+License: BSD
 */
 
 global $wpdb;
@@ -71,7 +71,8 @@ function folksaurusGetTermIdFromAnchorTag($html)
 
 /**
  * Add a class attribute to the anchor tags of terms if the term is
- * deleted, ambiguous, or nonpreferred.
+ * deleted, ambiguous, or nonpreferred, and if the user is logged in
+ * as an admin.
  *
  * @param string $html
  * @return string
@@ -79,6 +80,10 @@ function folksaurusGetTermIdFromAnchorTag($html)
 function folksaurusAddClassesToTermHtml($html)
 {
     global $wpdb;
+
+    if (!current_user_can('administrator') && !current_user_can('editor')) {
+        return $html;
+    }
 
     if (!preg_match_all('/<a href=.+?rel=".+?">/', $html, $matches)) {
         return $html;
