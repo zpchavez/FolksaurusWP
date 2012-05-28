@@ -1,0 +1,16 @@
+/*
+    Mark terms that are deleted, ambiguous, or non-preferred.
+*/
+
+a.deleted {
+    color: white;
+    background: red;
+}
+
+a.nonpreferred {
+    color: gray;
+}
+
+a.ambiguous {
+    background: yellow;
+}

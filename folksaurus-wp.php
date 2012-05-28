@@ -6,6 +6,7 @@ Description: Use Folksaurus for tags and categories.  Requires PHP 5.3.0 or high
 Author: Zachary Chavez
 Version: 0.1
 Author URI: http://zacharychavez.com
+License:
 */
 
 global $wpdb;
@@ -17,10 +18,115 @@ define('FOLKSAURUS_WP_VERSION', 0.1);
 define('FOLKSAURUS_TERM_DATA_TABLE', $wpdb->prefix . 'folksaurus_term_data');
 define('FOLKSAURUS_TERM_REL_TABLE', $wpdb->prefix . 'folksaurus_term_relationships');
 
+add_action('init', 'folksaurusInit');
 add_action('plugins_loaded', 'folksaurusUpdateDBCheck');
-add_action('get_the_tags', 'folksaurusGetTerms');
-add_action('get_the_categories', 'folksaurusGetTerms');
+add_filter('get_the_terms', 'folksaurusGetTerms');
 register_activation_hook(__FILE__, 'folksaurusSetupTables');
+
+add_filter('the_tags', 'folksaurusAddClassesToTermHtml');
+add_filter('the_category', 'folksaurusAddClassesToTermHtml');
+
+/**
+ * Configure stylesheet.
+ */
+function folksaurusInit()
+{
+    wp_enqueue_style(
+        'folksaurus-wp-css',
+        plugins_url(NULL, __FILE__) . '/folksaurus-wp.css',
+        array(),
+        FOLKSAURUS_WP_VERSION
+    );
+}
+
+/**
+ * Get the term_id from the anchor tag for a category or tag.
+ *
+ * @param string $html
+ * @return int
+ */
+function folksaurusGetTermIdFromAnchorTag($html)
+{
+    global $wpdb;
+
+    if (preg_match('/tag=(.+?)"/', $html, $matches)) {
+        $slug = $matches[1];
+        $termId = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT term_id FROM ' . $wpdb->terms .
+                ' WHERE slug = %s',
+                $slug
+            )
+        );
+        return $termId;
+    }
+
+    if (preg_match('/cat=(.+?)"/', $html, $matches)) {
+        $termId = $matches[1];
+        return $termId;
+    }
+
+    return false;
+}
+
+/**
+ * Add a class attribute to the anchor tags of terms if the term is
+ * deleted, ambiguous, or nonpreferred.
+ *
+ * @param string $html
+ * @return string
+ */
+function folksaurusAddClassesToTermHtml($html)
+{
+    global $wpdb;
+
+    if (!preg_match_all('/<a href=.+?rel=".+?">/', $html, $matches)) {
+        return $html;
+    }
+
+    $openingAnchorTags = $matches[0];
+    foreach ($openingAnchorTags as $openingAnchorTag) {
+        $termId = folksaurusGetTermIdFromAnchorTag($openingAnchorTag);
+        if (!$termId) {
+            continue;
+        }
+
+        $termData = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT * FROM ' . FOLKSAURUS_TERM_DATA_TABLE .
+                ' WHERE term_id = %d',
+                $termId
+            ),
+            ARRAY_A
+        );
+        if (!$termData) {
+            continue;
+        }
+
+        if ($termData['deleted'] == 1) {
+            $class = 'deleted';
+        } else if ($termData['ambiguous'] == 1) {
+            $class = 'ambiguous';
+        } else if ($termData['preferred'] == 0) {
+            $class = 'nonpreferred';
+        }
+
+        $filteredAnchorTag = str_replace(
+            'href=',
+            sprintf('class="%s" href=', $class),
+            $openingAnchorTag
+        );
+        $html = str_replace($openingAnchorTag, $filteredAnchorTag, $html);
+    }
+
+    return $html;
+}
+
+function folksaurusAddClassesToCategoryHtml($param)
+{
+    var_dump($param);
+}
+
 
 /**
  * Set up tables needed by Folksaurus WP
