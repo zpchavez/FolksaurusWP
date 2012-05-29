@@ -49,7 +49,7 @@ class FolksaurusWP
         if (version_compare(PHP_VERSION, self::REQUIRED_PHP_VER, '<')) {
             $requirementsMet = false;
             $this->_errors[] = sprintf(
-                'FolksaurusWP plugin requires PHP version %s or greater.  You are using %s.',
+                __('FolksaurusWP plugin requires PHP version %s or greater.  You are using %s.'),
                 self::REQUIRED_PHP_VER,
                 PHP_VERSION
             );
@@ -68,7 +68,7 @@ class FolksaurusWP
         if (!$found) {
             $requirementsMet = false;
             $this->_errors[] = sprintf(
-                'PholksaurusLib library not found in include path.'
+                __('PholksaurusLib library not found in include path.')
             );
         }
 
@@ -127,6 +127,7 @@ class FolksaurusWP
      */
     public function printErrors()
     {
+        $errorHeader = __('Errors encountered when loading FolksaurusWP plugin.');
         include 'errors.phtml';
     }
 
