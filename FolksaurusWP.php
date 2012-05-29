@@ -5,6 +5,8 @@
  */
 class FolksaurusWP
 {
+    const REQUIRED_PHP_VER = '5.3.0';
+
     static protected $_instance;
 
     /**
@@ -42,7 +44,35 @@ class FolksaurusWP
      */
     public function requirementsMet()
     {
-        return true;
+        $requirementsMet = true;
+
+        if (version_compare(PHP_VERSION, self::REQUIRED_PHP_VER, '<')) {
+            $requirementsMet = false;
+            $this->_errors[] = sprintf(
+                'FolksaurusWP plugin requires PHP version %s or greater.  You are using %s.',
+                self::REQUIRED_PHP_VER,
+                PHP_VERSION
+            );
+        }
+
+        $requiredLib = 'PholksaurusLib/init.php';
+        $paths = explode(PATH_SEPARATOR, get_include_path());
+        $found = false;
+        foreach ($paths as $path) {
+            $fullPath = $path . DIRECTORY_SEPARATOR . $requiredLib;
+            if (is_file($fullPath)) {
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            $requirementsMet = false;
+            $this->_errors[] = sprintf(
+                'PholksaurusLib library not found in include path.'
+            );
+        }
+
+        return $requirementsMet;
     }
 
     /**
