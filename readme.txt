@@ -49,7 +49,9 @@ You must follow these steps before Folksaurus WP will work.
 1. Download [PholksaurusLib][1] and copy the PholksaurusLib directory to a
    location in your include path.
 2. [Obtain a Folksaurus API key][2] and add it to the config.ini file for
-   PholksaurusLib.
+   PholksaurusLib.  If you want Folksaurus WP to have its own config file
+   instead of using the one in the PholksaurusLib directory, you may place
+   the file in the Folksaurus WP plugin directory and it will be used instead.
 
 [1]: https://github.com/zpchavez/Pholksaurus-Lib
 [2]: http://www.folksaurus.com/profile/dev/register-app

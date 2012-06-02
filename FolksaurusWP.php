@@ -157,7 +157,14 @@ class FolksaurusWP
         }
         $dataInterface = new FolksaurusWP\DataInterface();
         try {
-            $termManager = new PholksaurusLib\TermManager($dataInterface);
+            // Use config.ini in plugin directory if available, otherwise use the default.
+            $localConfigFile = __dir__ . '/config.ini';
+            if (is_file($localConfigFile)) {
+                $termManager = new PholksaurusLib\TermManager($dataInterface, $localConfigFile);
+            } else {
+                $termManager = new PholksaurusLib\TermManager($dataInterface);
+            }
+
             foreach ($terms as $term) {
                 $termManager->getTermByAppId($term->term_id);
             }
