@@ -19,10 +19,7 @@ define('FOLKSAURUS_TERM_REL_TABLE', $wpdb->prefix . 'folksaurus_term_relationshi
 
 $folksaurusWP = FolksaurusWP::getInstance();
 
-if ($folksaurusWP->requirementsMet()) {
-    require 'PholksaurusLib/init.php';
-    require 'DataInterface.php';
-
+if ($folksaurusWP->requirementsMet()) {    
     register_activation_hook(__FILE__, array($folksaurusWP, 'setupTables'));
 
     add_action('init', array($folksaurusWP, 'addStyleSheets'));

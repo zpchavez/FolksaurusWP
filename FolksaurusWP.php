@@ -10,9 +10,16 @@ class FolksaurusWP
     static protected $_instance;
 
     /**
+     * The TermManager object used by FolksaurusWP.
      *
+     * @var PholksaurusLib\TermManager
+     */
+    protected $_termManager;
+
+    /**
+     * An array of error messages.
      *
-     * @var type
+     * @var array
      */
     protected $_errors = array();
 
@@ -70,6 +77,22 @@ class FolksaurusWP
             $this->_errors[] = sprintf(
                 __('PholksaurusLib library not found in include path.')
             );
+        }
+
+        // Load TermManager and display any errors.
+        if ($requirementsMet) {
+            require_once 'PholksaurusLib/init.php';
+            require_once 'DataInterface.php';
+            try {
+                $dataInterface = new FolksaurusWP\DataInterface();
+                $this->_termManager = new PholksaurusLib\TermManager(
+                    $dataInterface,
+                    array('configSection' => 'FolksaurusWP')
+                );
+            } catch (PholksaurusLib\Exception $e) {
+                $this->_errors[] = $e->getMessage();
+                $requirementsMet = false;
+            }
         }
 
         return $requirementsMet;
@@ -155,9 +178,8 @@ class FolksaurusWP
         if (!$terms) {
             return;
         }
-        $dataInterface = new FolksaurusWP\DataInterface();
         try {
-            $termManager = new PholksaurusLib\TermManager($dataInterface);
+            $termManager = $this->_termManager;
             foreach ($terms as $term) {
                 $termManager->getTermByAppId($term->term_id);
             }
