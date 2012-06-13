@@ -79,23 +79,6 @@ class DataInterfaceTest extends \WP_UnitTestCase
         return $termArray;
     }
 
-    /**
-     * Get a PholksaurusLib\Term object for the term "Foo".
-     *
-     * @return PholksaurusLib\Term
-     */
-    protected function _getFolksaurusTermObject()
-    {
-        $mockManager = $this->getMockBuilder('\PholksaurusLib\TermManager')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $term = new \PholksaurusLib\Term(
-            $this->_getFolksaurusTermArray(),
-            $mockManager
-        );
-    }
-
     public function testDeleteTermSetsDeletedFlagOfTheTermToTrue()
     {
         global $wpdb;
